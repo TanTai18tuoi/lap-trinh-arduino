@@ -1,0 +1,45 @@
+#include <Servo.h>
+#include <IRremote.h>
+const int ReceivePin = 10; // thiết lập chân đọc dữ liệu data hồng ngoại
+Servo myservo;
+int angle = 0;
+unsigned long previousMillis = 0;
+const long interval = 15;
+bool dir = true;
+
+void setup() {
+  Serial.begin(9600);
+  myservo.attach(9);
+  IrReceiver.begin(ReceivePin, true, 13); // true: chế độ giám sát
+  previousMillis = millis();
+}
+
+void loop() {
+  updateServo();
+  redremote();
+}
+
+void redremote(){
+  if (IrReceiver.decode() > 0)  {
+    uint32_t dataRemote = IrReceiver.decodedIRData.decodedRawData;// Dữ liệu thô đã giải mã gán vào biến dataRemote
+    if (dataRemote > 0){
+      Serial.println("Dữ liệu nhận được : " +  String(dataRemote));
+    }
+    IrReceiver.resume(); // Cho phép nhận giá trị tiếp theo
+  }
+}
+
+void updateServo() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    myservo.write(angle);
+    if (dir) {
+      angle += 1;
+      if (angle > 180) dir = false;
+    } else {
+      angle -= 1;
+      if (angle < 0) dir = true;
+    }
+  }
+}
